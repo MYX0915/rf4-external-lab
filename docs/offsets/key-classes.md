@@ -263,3 +263,78 @@ static +0x0    <kanghfjgcak>k__BackingField    ← 单例
 | 银币 / 经验 / 等级 | `Fisher` 或玩家存档对象 | 卖鱼前后对比 |
 | 背包物品 | Inventory 容器（待定位） | 增减物品对比 |
 | 水温水压 | `WeatherManager` | 对照 HUD 显示 |
+
+
+---
+
+## 11. TypeInfo 槽地址（RVA，相对 GameAssembly.dll）
+
+> 来源：`Il2CppHeader/script.json` 的 `ScriptMetadata`（11254 条）
+> 交叉验证：`PointerPaths.txt` 中的同三条链完全一致 ✓
+
+| 类 | TypeInfo RVA | PointerPaths 对照 |
+|---|---|---|
+| **`RF4.Client.MyBoid`** | **`0x040C7FE8`** | 不在链表中（静态未初始化） |
+| `RF4.Client.GameController` | `0x040D8F88` | ✅ `["GameAssembly.dll"+40D8F88]+B8]+0` |
+| `RF4.Client.FishingScene.FishingZonesManager` | `0x040A09D0` | ✅ `["GameAssembly.dll"+40A09D0]+B8]+0` |
+| `RF4.Client.Weather.WeatherManager` | `0x040C8330` | ✅ `["GameAssembly.dll"+40C8330]+B8]+38` |
+| `RF4.Client.FishingScene.Fisher` | `0x040C2408` | — |
+| `RF4.Client.Assets.FishFamilyAsset` | `0x040C97C8` | — |
+
+读取链：
+
+```python
+classPtr     = read_u64(module_base + RVA)      # Il2CppClass*
+staticFields = read_u64(classPtr + 0xB8)        # void*
+instance     = read_u64(staticFields + 字段偏移)
+```
+
+**注意**：槽存在 ≠ 已初始化。类没被触碰过时槽里是 0。
+`MyBoid` 的槽在进钓点后才会填上。
+
+---
+
+## 12. Rig 的具体子类（metadata 里已注册的）
+
+抽象类 `Rig` 本身没有独立 TypeInfo 槽，实际存在的是这些子类：
+
+```
+RF4_Client_FishingScene_RigMarinePilker
+RF4_Client_FishingScene_RigLureComplex
+RF4_Client_FishingScene_RigBobberCarp
+RF4_Client_FishingScene_RigBobberClassic
+```
+
+还有 `RF4_Client_FishingScene_Rod`、`RF4_Client_Assets_RodAsset`、`RF4_Client_Assets_RodPodAsset`。
+
+`FishingSet` 本身也没有独立槽（只有它的编译器生成嵌套类型有）。
+
+---
+
+## 13. Transform 位置读取的难点
+
+`UnityEngine.Transform` 在 dump.cs 里**只有属性没有字段**：
+
+```csharp
+public class UnityEngine.Transform : UnityEngine.Component
+{
+    // Properties
+    public UnityEngine.Vector3 position { get; set; }        ← 无 backing field
+    public UnityEngine.Vector3 localPosition { get; set; }   ← 无 backing field
+    ...
+}
+```
+
+数据在原生侧（`m_CachedPtr` at +0x10 指向原生 Transform），
+原生结构布局随 Unity 版本变化，不能硬读。
+
+**规避方案**：`MyBoid` 自己带了 3 个 Vector3 候选字段：
+
+```
++0x78  amdldkbppia
++0x84  jamcobfgbei
++0x90  bioejnpeahk
+```
+
+其中一个就是世界坐标。用 `src/reader/probe_myboid.py` 在游戏里跑一遍，
+看哪个落在合理的地图坐标范围内即可确认。
