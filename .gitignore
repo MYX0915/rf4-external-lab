@@ -67,3 +67,10 @@ build/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# ---- 驱动编译产物（备用方案，当前不用）----
+driver/*.sys
+driver/*.obj
+driver/*.pdb
+driver/*.inf
+driver/*.cat
