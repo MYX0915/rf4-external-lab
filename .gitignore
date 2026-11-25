@@ -1,0 +1,69 @@
+# ============================================================
+#  RF4 External Lab — .gitignore
+#  原则：只提交自己写的文档与代码；第三方 dump / 源码 / 游戏文件不入库
+# ============================================================
+
+# ---- 第三方 SDK dump（264 MB，来源 unknowncheats，自行获取）----
+sdk/
+rf4_x64_*/
+*.dump
+dump.cs
+offsets.json
+script.json
+il2cpp.h
+Assembly_CSharp.hpp
+Members.tsv
+*_names.py
+x64dbg_labels.dd64
+
+# ---- 原始压缩包 ----
+*.zip
+*.7z
+*.rar
+
+# ---- 第三方仓库源码（refs/ 只保留 LINKS.md）----
+refs/*.py
+refs/*.cs
+refs/*.hpp
+refs/*.txt
+refs/*.md
+!refs/LINKS.md
+
+# ---- 运行时产物 ----
+*.log
+*.jsonl
+*.bin
+*.csv
+*.tsv
+snapshots/
+out/
+detections*
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# ---- C / C++ ----
+*.obj
+*.o
+*.exe
+*.dll
+*.pdb
+*.ilk
+obj/
+bin/
+build/
+
+# ---- 编辑器 / 系统 ----
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+Thumbs.db
+desktop.ini
+.DS_Store
